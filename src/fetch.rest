@@ -1,0 +1,22 @@
+# GET  http://localhost:8000/profile/profile_id
+# Content-Type: "application/json"
+# body:
+# {
+#     "params":"792d6de4-9d07-4b0f-83a3-a63ec3a06bc5"
+# }
+
+# ###
+
+# POST http://localhost:8000/login/username/passsword
+# Content-Type: "application/json"
+       
+# ###    
+# POST http://localhost:8000/createprofile
+# Content-Type: "application/json"
+
+
+# ###
+# GET http://localhost:8000/bucketlist
+
+# ###
+# POST http://localhost:8000/addnewrecommendation

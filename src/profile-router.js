@@ -1,8 +1,12 @@
 const express = require("express");
 const ProfilesService = require("./profiles-service");
 const profileRouter = express.Router();
-
+const { default: knex } = require('knex');
 const bodyParser = express.json();
+const { uuid } = require('uuidv4');
+const bcrypt=require('bcrypt');
+require('dotenv').config()
+const jwt = require('jsonwebtoken')
 
 const serializeProfile = (profile) => ({
   id: profile.id,
@@ -43,6 +47,7 @@ profileRouter
     const { firstName, lastName, userName, password, bandname, bio, profilePicture } = req.body;
 
     const newProfile = {
+      id:req.body.id,
       first_name: req.body.firstName,
       last_name: req.body.lastName,
       username: req.body.userName,
@@ -96,7 +101,7 @@ profileRouter.route("/profile/:profile_id").get((req, res, next) => {
 				res.send(serializeProfile(profile)).status(204).end()
 
 			})
-			//.catch(next)
+			
 	})
   .delete((req, res, next) => {
   ProfilesService.deleteProfile(req.app.get('db'), req.params.profile_id)
@@ -106,17 +111,64 @@ profileRouter.route("/profile/:profile_id").get((req, res, next) => {
     .catch(next)
 })
 
-profileRouter.route("/profile").get((req, res) => {
-  res.status(200).send("Here is the logged in user");
-});
+profileRouter.route("/profile").get(authenticateToken,(req, res) => {
+  
+  res.send("200");
+})
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1]
+  if (token == null) return res.send("401")
 
-profileRouter.route("/createprofile").post(bodyParser, (req, res) => {
-  res.status(200).send("Here is the create profile page");
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+    console.log(err)
+ 
+   if (err) return res.send("403")
+    req.user = user
+    console.log("success")
+    next()
+  })
+}
+profileRouter.route("/createprofile").post( (req, res) => {
+  
+  try{
+    res.status(200).send("Here is the create profile page");
+    }catch(e){console.log(e)}
 });
 
 //change to post
 profileRouter.route("/editprofile").get((req, res) => {
+  try{
   res.status(200).send("Here is the edit profile page");
+  }catch(e){console.log(e)}
 });
+
+ profileRouter.route("/login/username/passsword").post(bodyParser, (req, res) => {
+  
+  const knexInstance = req.app.get("db");
+  const a=req.body;
+ ProfilesService.validate(a.username,a.password,knexInstance).then((data)=>{
+ // console.log(data);
+  if (data.length===0) {
+    res.send("200")
+    } else {
+      
+       (async function check(){
+        try{
+          if(await bcrypt.compare(a.password,data[0].password)){
+          
+            console.log("correct")
+            const user = { name: a.username }
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
+            res.json({"token":accessToken,"id":data[0].id});
+           // console.log(accessToken);
+          }else{
+            res.send("400")
+          }
+        }catch(e){alert(e)}
+       })()
+}}
+
+)});
 
 module.exports = profileRouter;

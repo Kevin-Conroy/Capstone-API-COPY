@@ -4,21 +4,25 @@ const profileRouter = require("./profile-router");
 const restaurantRouter = require("./restaurant-router");
 const knex = require("knex");
 const app = require("./app");
+
+
 const { PORT, DATABASE_URL } = require('./config');
 
 const knexInstance = knex({
   client: 'pg',
   connection: process.env.DATABASE_URL
-})
+ //connection:{ host:'localhost', user:'postgres', password:'qwerty', database:'music', port:'5432' },
+});
 
 const db = knex({
   client: 'pg',
   connection: DATABASE_URL,
-})
+  //connection:{ host:'localhost', user:'postgres', password:'qwerty', database:'music', port:'5432' },
+});
 
 app.set('db', db)
 
-const morganSetting = process.env.NODE_ENV === "production" ? "tiny" : "common";
+const morganSetting = (process.env.NODE_ENV === "production" )? "tiny" : "common";
 app.use(morgan(morganSetting));
 app.use(profileRouter);
 app.use(restaurantRouter)
